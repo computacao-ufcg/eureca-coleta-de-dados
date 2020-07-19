@@ -66,3 +66,4 @@ fi
 echo "$(date): Gerando tabelas"
 $dir_scripts/gera-tabelas.sh $dir_destino/input $dir_destino/tabelas $periodo_atual
 
+echo "$(date): Processamento concluido; tabelas disponiveis em $dir_destino/tabelas"

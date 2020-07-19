@@ -55,14 +55,6 @@ function anonimize_input_disciplinas() {
 	mat=$(echo $@ | awk -F ";" '{ print $3 }')
 	anonimo=$(anonimize_mat $mat $do_anonimize)
         suffix=$(echo $@ | awk -F ";" '{ for(i=4; i<=NF; i++) print ";"$i }' | tr -s '\n' ' ' | sed -e '/ ;/s,,;,g')
-#	codigo=$(echo $@ | awk -F ";" '{ print $4 }')
-#	periodo=$(echo $@ | awk -F ";" '{ print $5 }')
-#	creditos=$(echo $@ | awk -F ";" '{ print $6 }')
-#	horas=$(echo $@ | awk -F ";" '{ print $7 }')
-#	tipo=$(echo $@ | awk -F ";" '{ print $8 }')
-#	media=$(echo $@ | awk -F ";" '{ print $9 }')
-#	situacao=$(echo $@ | awk -F ";" '{ print $10 }')
-#	echo "$anonimo;$codigo;$periodo;$creditos;$horas;$tipo;$media;$situacao" >> $dir_fonte/disciplinas.csv
 	echo "$anonimo$suffix" >> $dir_fonte/disciplinas.csv
 }
 
@@ -84,9 +76,6 @@ function anonimize_input_vinculo() {
 	mat2=$(echo $@ | awk -F ";" '{ print $4 }')
 	anonimo1=$(anonimize_mat $mat1 $do_anonimize)
 	anonimo2=$(anonimize_mat $mat2 $do_anonimize)
-#	curso=$(echo $@ | awk -F ";" '{ print $5 }')
-#	evento=$(echo $@ | awk -F ";" '{ print $6 }')
-#	periodo=$(echo $@ | awk -F ";" '{ print $7 }')
 	suffix=$(echo $@ | awk -F ";" '{ for(i=5; i<=NF; i++) print ";"$i }' | tr -s '\n' ' ' | sed -e '/ ;/s,,;,g')
 	echo "$anonimo1;$anonimo2$suffix" >> $dir_fonte/vinculo.csv 
 }
