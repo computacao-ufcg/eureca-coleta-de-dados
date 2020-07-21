@@ -9,6 +9,14 @@ function generate_cpf() {
 }
 
 function anonimize_mat() {
+	if [ "$1" = "115211093" ]; then
+		echo "115218850"
+		exit 0
+	fi
+        if [ "$1" = "115211312" ]; then
+                echo "115261698"
+                exit 0
+        fi
 	if [ "$2AA" = "trueAA" ]; then
 		matricula=$1
 		a=$(echo $matricula | cut -c 2-3)
@@ -66,7 +74,7 @@ function anonimize_input_nota() {
 	anonimo=$(anonimize_mat $mat $do_anonimize)
 	nome=$(anonimize_nome "$(echo $@ | awk -F ";" '{ print $7 }')" $do_anonimize)
 	suffix=$(echo $@ | awk -F ";" '{ for(i=8; i<=NF; i++) print ";"$i }' | tr -s '\n' ' ' | sed -e '/ ;/s,,;,g')
-	echo "$prefix$mat;$nome$suffix" >> $dir_fonte/nota.csv
+	echo "$prefix$anonimo;$nome$suffix" >> $dir_fonte/nota.csv
 }
 
 function anonimize_input_vinculo() {
@@ -104,16 +112,16 @@ dir_fonte=$1
 do_anonimize=$2
 
 mv $dir_fonte/cadastro.csv $dir_fonte/cadastro.ori
-cat $dir_fonte/cadastro.ori | awk -v f=$dir_fonte -v a=$do_anonimize '{ system("bash -c '\'' process_line anonimize_input_cadastro \""f";"a";"$0"\" '\'' ") }'
+cat $dir_fonte/cadastro.ori | sed -e "/\'/s,,,g" | awk -v f=$dir_fonte -v a=$do_anonimize '{ system("bash -c '\'' process_line anonimize_input_cadastro \""f";"a";"$0"\" '\'' ") }'
 
 mv $dir_fonte/disciplinas.csv $dir_fonte/disciplinas.ori
-cat $dir_fonte/disciplinas.ori | awk -v f=$dir_fonte -v a=$do_anonimize '{ system("bash -c '\'' process_line anonimize_input_disciplinas \""f";"a";"$0"\" '\'' ") }'
+cat $dir_fonte/disciplinas.ori | sed -e "/\'/s,,,g" | awk -v f=$dir_fonte -v a=$do_anonimize '{ system("bash -c '\'' process_line anonimize_input_disciplinas \""f";"a";"$0"\" '\'' ") }'
 
 mv $dir_fonte/vinculo.csv $dir_fonte/vinculo.ori
-cat $dir_fonte/vinculo.ori | awk -v f=$dir_fonte -v a=$do_anonimize '{ system("bash -c '\'' process_line anonimize_input_vinculo \""f";"a";"$0"\" '\'' ") }'
+cat $dir_fonte/vinculo.ori | sed -e "/\'/s,,,g" | awk -v f=$dir_fonte -v a=$do_anonimize '{ system("bash -c '\'' process_line anonimize_input_vinculo \""f";"a";"$0"\" '\'' ") }'
 
 mv $dir_fonte/nota.csv $dir_fonte/nota.ori
-cat $dir_fonte/nota.ori | awk -v f=$dir_fonte -v a=$do_anonimize '{ system("bash -c '\'' process_line anonimize_input_nota \""f";"a";"$0"\" '\'' ") }'
+cat $dir_fonte/nota.ori | sed -e "/\'/s,,,g" | awk -v f=$dir_fonte -v a=$do_anonimize '{ system("bash -c '\'' process_line anonimize_input_nota \""f";"a";"$0"\" '\'' ") }'
 
 mv $dir_fonte/frequencia.csv $dir_fonte/frequencia.ori
 cat $dir_fonte/frequencia.ori | awk -v f=$dir_fonte -v a=$do_anonimize '{ system("bash -c '\'' process_line anonimize_input_frequencia \""f";"a";"$0"\" '\'' ") }'
