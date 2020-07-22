@@ -203,7 +203,7 @@ function generate_headers() {
 	echo "descricao" > $dir_destino/Cota.header
 	echo "nome" > $dir_destino/Curso.header
 	echo "descricao" > $dir_destino/Deficiencia.header
-	echo "cpf;nome;id_situacao;semestre_situacao;id_ingresso;semestre_ingresso;ano_nascimento;id_cota;id_tipo_escola;ano_conclusao_ensino_medio;email;genero;id_estado_civil;id_nacionalidade;id_pais_origem;id_naturalidade;id_cor" > $dir_destino/Discente.header
+	echo "cpf;nome;id_situacao;semestre_situacao;id_ingresso;semestre_ingresso;ano_nascimento;id_cota;id_tipo_escola;ano_conclusao_ensino_medio;email;id_genero;id_estado_civil;id_nacionalidade;id_pais_origem;id_naturalidade;id_cor" > $dir_destino/Discente.header
 	echo "cpf;id_deficiencia" > $dir_destino/DiscenteDeficiencia.header
 	echo "matricula;id_turma;num_faltas;nota1;nota2;nota3;nota4;nota5;nota6;nota7;nota8;media_parcial;prova_final;media_final;id_situacao" > $dir_destino/DiscenteDisciplina.header
 	echo "cpf;matricula;id_curso;id_situacao_vinculo;semestre_vinculo" > $dir_destino/DiscenteVinculo.header
