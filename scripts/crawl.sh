@@ -36,11 +36,16 @@ export -f process_turmas
 
 matriculas=$1
 periodos=$2
-credencial=$3
+login=$3
 dir_destino=$4
 dir_scripts=$5
 
 mkdir -p $dir_destino/discentes
+
+credencial=$dir_destino/credencial
+touch $credencial
+chmod 600 $credencial
+cat $login | sed -e 's,$,\,CoordenacaoLogin,' > $credencial
 
 for i in `cat $matriculas`
 do

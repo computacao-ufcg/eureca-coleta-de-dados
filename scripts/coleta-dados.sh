@@ -4,8 +4,7 @@
 # eh preciso anonimizar os campos sensiveis das tabelas a serem geradas. O primeiro arquivo contém a lista
 # de matriculas (uma por linha) dos discentes cujos dados serao coletados. O segundo arquivo contém a lista
 # de periodos (um por linha) no formato (AAAA.P, ex. 2020.1) cujos dados serao coletados. O terceiro arquivo
-# contém a credencial da coordenacao para acesso ao SCAO. O formato desse arquivo e o seguinte: 
-# <usuario>,<senha>,CoordenacaoLogin
+# contém a credencial da coordenacao para acesso ao SCAO. O formato desse arquivo e o seguinte: <login>,<senha>
 # O quarto parametro eh o nome do diretorio onde os dados coletados serao armazenados. Se o quinto parametro
 # nao for passado ou for passado com um valor diferente de true, os campos nao serao anonimizados.
 
