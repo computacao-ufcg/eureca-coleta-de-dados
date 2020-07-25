@@ -6,7 +6,7 @@ coleta-dados.sh matriculas periodos credencial dir_destino [true]
 
 matriculas: arquivo contendo as matrículas de todos os discentes do curso (não tem como fazer crawler dessa informação, pois só é possível listar os alunos ativos e há um relatório com os egressos dos últimos 15 anos, mas eu consegui essa informação do nosso antigo sistema de egressos)
 
-periodos: arquivo contendo os períodos que serão extraídos (2002.1 até 2020.1)
+periodos: arquivo contendo os períodos que serão extraídos (ex. 2002.1 até 2020.1)
 
 credencial: arquivo com as credenciais do coordenador no formato <login>,<senha>
 
@@ -23,7 +23,7 @@ gera-tabelas.sh: gera as tabelas a serem importadas
 
 Só para ter uma ideia do tempo de processamento, para o curso de Ciência da Computação (2144 discentes e 37 períodos) os tempos foram os seguintes:
 - crawl.sh: 3hs 19 min
-- extra-dados.sh: 13hs 45 min
+- extrai-dados.sh: 13hs 45 min
 - anonimize.sh: 4hs 38min
 - gera-tabelas.sh: 29hs 11 min
 
