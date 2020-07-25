@@ -8,11 +8,11 @@ function get_from_table() {
 	pattern=$1
 	table=$2
 
-	if [ "$patternAA" = "AA" ] || [ "AA$pattern" = "AA-" ]; then
+	if [ "AA$pattern" = "AA" ] || [ "AA$pattern" = "AA-" ]; then
 		echo "1"
 	else
 		resposta=$(echo "$(grep -n "$pattern" $table | head -1 | awk -F ":" '{ print $1 }')")
-		if [ "$respostaAA" = "AA" ]; then
+		if [ "AA$resposta" = "AA" ]; then
 			echo "1"
 		else
 			echo $resposta
@@ -36,7 +36,7 @@ function process_input_cadastro() {
 	echo $cpf";"$mat >> $dir_fonte/cpf-mat-mapping.csv
 	nome=$(echo $@ | awk -F ";" '{ print $6 }')
 	situacao_tipo_base=$(echo $@ | awk -F ";" '{ print $7 }' | awk '{ print $1 }')
-	if [ "$situacao_tipo_baseAA" = "InativoAA" ]; then
+	if [ "AA$situacao_tipo_base" = "AAInativo" ]; then
 		semestre_situacao=$(echo $@ | awk -F ";" '{ print $7 }' | awk '{ print $NF }' | sed 's,)$,,')
 	else
 		semestre_situacao=$periodo_atual
@@ -89,7 +89,7 @@ function process_input_cadastro() {
 
 	id_curso=$(get_from_table "$(echo "CINCIA DA COMPUTAO - D")" $dir_destino/Curso.data)
 
-	if [ "$situacao_tipo_baseAA" = "AtivoAA" ]; then
+	if [ "AA$situacao_tipo_base" = "AAAtivo" ]; then
 		id_situacao_vinculo=$(get_from_table "REGULAR" $dir_destino/SituacaoVinculo.data)
 	else
 		situacao_vinculo=$(echo $@ | awk -F ";" '{ print $7 }' | awk -F "(" '{ print $2 }' | awk '{ $NF=""; print $0 }' | sed -e 's, $,,')
@@ -106,9 +106,10 @@ function process_input_vinculo() {
 	cpf=$(get_cpf_from_matricula $mat)
 	mat_vinculo=$(echo $@ | awk -F ";" '{ print $5 }')
 	id_curso=$(get_from_table "$(echo $@ | awk -F ";" '{ print $6 }')" $dir_destino/Curso.data)
-	id_situacao_vinculo=$(get_from_table "$(echo $@ | awk -F ";" '{ print $7 }')" $dir_destino/SituacaoVinculo.data)
+	situacao_vinculo=$(echo $@ | awk -F ";" '{ print $7 }')
+	id_situacao_vinculo=$(get_from_table "$situacao_vinculo" $dir_destino/SituacaoVinculo.data)
 	periodo=$(echo $@ | awk -F ";" '{ print $8 }')
-	if [ "$periodoAA" = "AtivoAA" ]; then
+	if [ "AA$situacao_vinculo" = "AAAtivo" ]; then
 		periodo=$periodo_atual
 	fi
 	echo $cpf";"$mat_vinculo";"$id_curso";"$id_situacao_vinculo";"$periodo >> $dir_destino/DiscenteVinculo.data
@@ -186,15 +187,18 @@ function process_input_aluno_disciplina() {
 function process_falta() {
 	dir_destino=$(echo $@ | awk -F ";" '{ print $1 }')
 	falta=$(echo $@ | awk -F ";" '{ print $2 }')
-	matricula=$(echo $@ | awk -F ";" '{ print $3 }')
-	codigo_disciplina=$(echo $@ | awk -F ";" '{ print $4 }')
-	creditos=$(echo $@ | awk -F ";" '{ print $5 }')
-	horas=$(echo $@ | awk -F ";" '{ print $6 }')
-	indice=$(echo $@ | awk -F ";" '{ print $7 }')
+	codigo_disciplina=$(echo $@ | awk -F ";" '{ print $3 }')
+	turma=$(echo $@ | awk -F ";" '{ print $4 }')
+	periodo=$(echo $@ | awk -F ";" '{ print $5 }')
+	matricula=$(echo $@ | awk -F ";" '{ print $6 }')
+        creditos=$(echo $@ | awk -F ";" '{ print $7 }')
+	horas=$(echo $@ | awk -F ";" '{ print $8 }')
+	indice=$(echo $@ | awk -F ";" '{ print $9 }')
    	if [ "$falta" -eq "1" ]; then
 		dia=$(expr $indice - 7)
 		id_disciplina=$(get_from_table "$codigo_disciplina;$creditos;$horas" $dir_destino/Disciplina.data)
-		echo "$matricula;$id_disciplina;$dia"
+		id_turma=$(get_from_table "$id_disciplina;$turma;$periodo" $dir_destino/Turma.data)
+		echo "$matricula;$id_turma;$dia"
 	fi
 }
 
@@ -210,7 +214,7 @@ function generate_headers() {
 	echo "codigo;creditos;horas;nome" > $dir_destino/Disciplina.header
 	echo "descricao" > $dir_destino/Escola.header
 	echo "descricao" > $dir_destino/EstadoCivil.header
-	echo "matricula;id_disciplina;num_aula" > $dir_destino/Falta.header
+	echo "matricula;id_turma;num_aula" > $dir_destino/Falta.header
 	echo "descricao" > $dir_destino/Genero.header
 	echo "descricao" > $dir_destino/Horario.header
 	echo "descricao" > $dir_destino/Ingresso.header
@@ -274,6 +278,7 @@ rm $dir_fonte/situacao_vinculo.tmp
 cat $dir_fonte/cadastro.csv | awk -F ";" '{ print $5 }' | sort | uniq > $dir_fonte/ingresso.tmp
 cat $dir_fonte/ingresso.tmp | awk '{$NF=""; print $0}' | sed 's, $,,' | sort | uniq > $dir_destino/Ingresso.data
 rm $dir_fonte/ingresso.tmp
+
 ed -s $dir_destino/Ingresso.data > /dev/null 2>&1 <<!
 1
 i
@@ -324,7 +329,7 @@ cat $dir_fonte/vinculo.csv | awk -F ";" '{ print $3 }' | sort | uniq > $dir_dest
 
 rm -f $dir_destino/Discente.data $dir_destino/DiscenteDeficiencia.data $dir_destino/DiscenteVinculo.data
 cat $dir_fonte/cadastro.csv | awk -v f=$dir_fonte -v d=$dir_destino -v p=$periodo_atual '{ system("bash -c '\'' process_line process_input_cadastro \""f";"d";"p";"$0"\" '\'' ") }'
-cat $dir_fonte/vinculo.csv | awk -v f=$dir_fonte -v d=$dir_destino -v p=$periodo_atual '{ system("bash -c '\'' process_line process_input_vinculo \""f";"d";"p";"$0"\" '\'' ") }'
+cat $dir_fonte/vinculo.csv | grep -v "CINCIA DA COMPUTAO - D" | awk -v f=$dir_fonte -v d=$dir_destino -v p=$periodo_atual '{ system("bash -c '\'' process_line process_input_vinculo \""f";"d";"p";"$0"\" '\'' ") }'
 
 rm -f $dir_destino/Disciplina.data
 cat $dir_fonte/disciplinas.csv | awk -F ";" '{ print $2";"$4";"$5";"$6";"$7 }' | sort | uniq > $dir_fonte/disciplina.tmp
@@ -335,6 +340,7 @@ rm $dir_fonte/disciplina.tmp
 cat $dir_fonte/disciplinas.csv | awk -F ";" '{ print $9 }' | sort | uniq > $dir_destino/SituacaoDisciplina.data
 
 # Fix data
+
 ed -s $dir_destino/Naturalidade.data > /dev/null 2>&1 <<!
 g/ALGODO DE JANDARA/s,,ALGODÃO DE JANDAÍRA
 g/AU;RN/s,,AÇU;RN
@@ -448,6 +454,7 @@ q
 cat $dir_fonte/resumo.csv | awk -F ";" '{ print $8 }' | sort | uniq > $dir_destino/Horario.data
 cat $dir_fonte/resumo.csv | awk -F ";" '{ print $9 }' | sort | uniq > $dir_destino/Sala.data
 cat $dir_fonte/resumo.csv | awk -F ";" '{ print $1";"$5";"$6";"$2 }' | tr -s ' ' | sort | uniq > $dir_destino/Disciplina.data
+
 # Incluir uma disciplina vazia
 ed -s $dir_destino/Disciplina.data > /dev/null 2>&1 <<!
 1
@@ -466,7 +473,7 @@ cat $dir_fonte/resumo.csv | awk -v f=$dir_fonte -v d=$dir_destino -v t=0 '{ t=t+
 rm -f $dir_destino/DiscenteDisciplina.data
 cat $dir_fonte/nota.csv | awk -v f=$dir_fonte -v d=$dir_destino '{ system("bash -c '\'' process_line process_input_aluno_disciplina \""f";"d";"$0"\" '\'' ") }'
 
-cat $dir_fonte/frequencia.csv | awk -F ";" -v d=$dir_destino '{ for(i=8; i<=NF; i++) { system("bash -c '\'' process_falta \""d";"$i";"$4";"$1";"$5";"$6";"i"\" '\'' ")} }' > $dir_destino/Falta.data
+cat $dir_fonte/frequencia.csv | awk -F ";" -v d=$dir_destino '{ for(i=8; i<=NF; i++) { system("bash -c '\'' process_falta \""d";"$i";"$1";"$2";"$3";"$4";"$5";"$6";"i"\" '\'' ")} }' > $dir_destino/Falta.data
 
 generate_headers
 

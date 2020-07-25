@@ -17,7 +17,7 @@ function anonimize_mat() {
                 echo "115261698"
                 exit 0
         fi
-	if [ "$2AA" = "trueAA" ]; then
+	if [ "AA$2" = "AAtrue" ]; then
 		matricula=$1
 		a=$(echo $matricula | cut -c 2-3)
 		t1=$(echo $matricula | cut -c 4-6)
@@ -36,7 +36,7 @@ function anonimize_mat() {
 }
 
 function anonimize_nome() {
-	if [ "$2AA" = "trueAA" ]; then
+	if [ "AA$2" = "AAtrue" ]; then
 		echo ""
 	else
 		echo $1
