@@ -329,7 +329,7 @@ cat $dir_fonte/vinculo.csv | awk -F ";" '{ print $3 }' | sort | uniq > $dir_dest
 
 rm -f $dir_destino/Discente.data $dir_destino/DiscenteDeficiencia.data $dir_destino/DiscenteVinculo.data
 cat $dir_fonte/cadastro.csv | awk -v f=$dir_fonte -v d=$dir_destino -v p=$periodo_atual '{ system("bash -c '\'' process_line process_input_cadastro \""f";"d";"p";"$0"\" '\'' ") }'
-cat $dir_fonte/vinculo.csv | grep -v "CINCIA DA COMPUTAO - D" | awk -v f=$dir_fonte -v d=$dir_destino -v p=$periodo_atual '{ system("bash -c '\'' process_line process_input_vinculo \""f";"d";"p";"$0"\" '\'' ") }'
+cat $dir_fonte/vinculo.csv | awk -v f=$dir_fonte -v d=$dir_destino -v p=$periodo_atual '{ system("bash -c '\'' process_line process_input_vinculo \""f";"d";"p";"$0"\" '\'' ") }'
 
 rm -f $dir_destino/Disciplina.data
 cat $dir_fonte/disciplinas.csv | awk -F ";" '{ print $2";"$4";"$5";"$6";"$7 }' | sort | uniq > $dir_fonte/disciplina.tmp
