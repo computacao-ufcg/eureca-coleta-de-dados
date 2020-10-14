@@ -72,6 +72,13 @@ def possui_cota(aluno):
     else:
         return False
 
+# verifica se o aluno possui dados de cota e currículo ou não
+def possui_cota_e_curriculo(aluno):
+    if len(aluno) == 26:
+        return True
+    else:
+        return False
+
 try:
     aluno = soup.find_all("div", class_="col-sm-9 col-xs-7")
 
@@ -109,7 +116,42 @@ try:
 
         # deficiências
         deficiencias = aluno[24].text.strip()
-        
+
+        # verifica se no cadastro existe informação do currículo, que corresponde
+        ## a um ano com 4 dígitos.
+        if len(aluno[2].text.strip()) == 4:
+            situacao, ingresso = aluno[3].text.strip(), aluno[4].text.strip()
+            cota = ''
+
+
+    elif possui_cota_e_curriculo(aluno):
+        # situação e ingresso
+        situacao, ingresso = aluno[3].text.strip(), aluno[4].text.strip()
+
+        # cota
+        cota = aluno[5].text.strip()
+
+        # cpf
+        cpf = aluno[7].text.strip()
+
+        # nascimento e tipo de instituição que cursou o ensino médio 
+        nascimento, tipo_instituicao = aluno[6].text.strip(), aluno[10].text.strip()
+
+        # ano de conclusão do ensino médio e e-mail
+        ano_conclusao, email = aluno[9].text.strip(), aluno[16].text.strip()
+
+        # sexo e estado civil
+        genero, estado_civil = aluno[17].text.strip(), aluno[18].text.strip()
+
+        # nacionalidade e país de origem
+        nacionalidade, pais_origem = aluno[21].text.strip(), aluno[22].text.strip()
+
+        # naturalidade e cor
+        naturalidade, cor = aluno[23].text.strip(), aluno[24].text.strip()
+
+        # deficiências
+        deficiencias = aluno[25].text.strip()
+ 
     else:
         # cpf
         cpf = aluno[5].text.strip()
@@ -135,7 +177,7 @@ try:
     output = '%s;%s;%s;%s;%s;%s;%s;%s;%s;%s;%s;%s;%s;%s;%s;%s;%s' % (matricula, cpf, nome, situacao, ingresso, 
         remove_caracter(cota), nascimento, remove_caracter(tipo_instituicao), ano_conclusao, email, genero, 
         remove_caracter(estado_civil), remove_caracter(nacionalidade), pais_origem, remove_caracter(naturalidade), 
-        cor, remove_caracter(verifica_deficiencia(deficiencias)))
+        remove_caracter(cor), remove_caracter(verifica_deficiencia(deficiencias)))
 
     print output
 

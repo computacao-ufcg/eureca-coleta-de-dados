@@ -20,10 +20,17 @@ function get_from_table() {
 	fi
 }
 
+function get_ultima_matricula_from_cpf() {
+	cpf=$1
+
+	entrada=$(grep ^$cpf $dir_destino/cpf-mat-mapping.csv | tail -1)
+	echo $(echo $entrada | awk -F ";" '{ print $2 }')
+}
+
 function get_cpf_from_matricula() {
 	matricula=$1
 
-	entrada=$(grep ";"$matricula $dir_fonte/cpf-mat-mapping.csv)
+	entrada=$(grep ";"$matricula $dir_destino/cpf-mat-mapping.csv)
 	echo $(echo $entrada | awk -F ";" '{ print $1 }')
 }
 
@@ -32,8 +39,7 @@ function process_input_cadastro() {
 	dir_destino=$(echo $@ | awk -F ";" '{ print $2 }')
 	periodo_atual=$(echo $@ | awk -F ";" '{ print $3 }')
 	mat=$(echo $@ | awk -F ";" '{ print $4 }')
-	cpf=$(echo $@ | awk -F ";" '{ print $5 }')
-	echo $cpf";"$mat >> $dir_fonte/cpf-mat-mapping.csv
+	cpf=$(echo $@ | awk -F ";" '{ print $5 }') 
 	nome=$(echo $@ | awk -F ";" '{ print $6 }')
 	situacao_tipo_base=$(echo $@ | awk -F ";" '{ print $7 }' | awk '{ print $1 }')
 	if [ "AA$situacao_tipo_base" = "AAInativo" ]; then
@@ -78,13 +84,23 @@ function process_input_cadastro() {
 	tipo_cor=$(echo $@ | awk -F ";" '{ print $19 }')
 	cor=$(get_from_table "$tipo_cor" $dir_destino/Cor.data)
 
-	echo $cpf";"$nome";"$situacao_tipo";"$semestre_situacao";"$ingresso_tipo";"$semestre_ingresso";"$nascimento";"$cota";"$inst";"$conclusao";"$email";"$genero";"$estado_civil";"$nacionalidade";"$pais_origem";"$naturalidade";"$cor >> $dir_destino/Discente.data
+	grep ^$cpf $dir_destino/cpf-mat-mapping.csv > /dev/null 2>&1
+	if [ "$?" -eq "0" ]; then
+		cp $dir_destino/ultima-matricula.csv $dir_destino/ultima-matricula.tmp
+		ultima_matricula_atual=$(get_ultima_matricula_from_cpf $cpf)
+		grep -v ^$ultima_matricula_atual $dir_destino/ultima-matricula.tmp > $dir_destino/ultima-matricula.csv
+		cp $dir_destino/Discente.data $dir_destino/Discente.tmp
+		grep -v ^$cpf $dir_destino/Discente.tmp > $dir_destino/Discente.data
+	fi
+	echo "$mat" >> $dir_destino/ultima-matricula.csv
+	echo $cpf";"$mat >> $dir_destino/cpf-mat-mapping.csv
+	echo "$cpf;$nome;$nascimento;$email;$genero;$estado_civil;$nacionalidade;$pais_origem;$naturalidade;$cor" >> $dir_destino/Discente.data
 
 	deficiencias=$(echo $@ | awk -F ";" '{ print $20 }' | sed -e 's, ,_,g')
 	for j in $(echo $deficiencias | awk -F ",_" '{ for(k=1;k<=NF;k++) print $k }')
 	do
 		deficiencia=$(echo $j | sed -e 's,_, ,g')
-		echo $cpf";"$(get_from_table "$deficiencia" $dir_destino/Deficiencia.data) >> $dir_destino/DiscenteDeficiencia.data
+		echo $cpf";"$(get_from_table "$deficiencia" $dir_destino/Deficiencia.data) >> $dir_destino/DiscenteDeficiencia.tmp
 	done
 
 	id_curso=$(get_from_table "$(echo "CINCIA DA COMPUTAO - D")" $dir_destino/Curso.data)
@@ -95,24 +111,28 @@ function process_input_cadastro() {
 		situacao_vinculo=$(echo $@ | awk -F ";" '{ print $7 }' | awk -F "(" '{ print $2 }' | awk '{ $NF=""; print $0 }' | sed -e 's, $,,')
 		id_situacao_vinculo=$(get_from_table "$situacao_vinculo" $dir_destino/SituacaoVinculo.data)
 	fi
-	echo $cpf";"$mat";"$id_curso";"$id_situacao_vinculo";"$semestre_situacao >> $dir_destino/DiscenteVinculo.data
+	echo "$cpf;$mat;$ingresso_tipo;$semestre_ingresso;$id_curso;$situacao_tipo;$semestre_situacao;$cota;$inst;$conclusao" >> $dir_destino/DiscenteVinculo.tmp
 }
 
 function process_input_vinculo() {
-	dir_fonte=$(echo $@ | awk -F ";" '{ print $1 }')
-	dir_destino=$(echo $@ | awk -F ";" '{ print $2 }')
-	periodo_atual=$(echo $@ | awk -F ";" '{ print $3 }')
-	mat=$(echo $@ | awk -F ";" '{ print $4 }')
-	cpf=$(get_cpf_from_matricula $mat)
-	mat_vinculo=$(echo $@ | awk -F ";" '{ print $5 }')
-	id_curso=$(get_from_table "$(echo $@ | awk -F ";" '{ print $6 }')" $dir_destino/Curso.data)
-	situacao_vinculo=$(echo $@ | awk -F ";" '{ print $7 }')
-	id_situacao_vinculo=$(get_from_table "$situacao_vinculo" $dir_destino/SituacaoVinculo.data)
-	periodo=$(echo $@ | awk -F ";" '{ print $8 }')
-	if [ "AA$situacao_vinculo" = "AAAtivo" ]; then
-		periodo=$periodo_atual
+        curso=$(echo $@ | awk -F ";" '{ print $6 }')
+        if [ "AA$curso" != "AACINCIA DA COMPUTAO - D" ]; then
+		dir_fonte=$(echo $@ | awk -F ";" '{ print $1 }')
+		dir_destino=$(echo $@ | awk -F ";" '{ print $2 }')
+		periodo_atual=$(echo $@ | awk -F ";" '{ print $3 }')
+		mat=$(echo $@ | awk -F ";" '{ print $4 }')
+		cpf=$(get_cpf_from_matricula $mat)
+		mat_vinculo=$(echo $@ | awk -F ";" '{ print $5 }')
+		id_curso=$(get_from_table "$(echo $@ | awk -F ";" '{ print $6 }')" $dir_destino/Curso.data)
+		situacao_vinculo=$(echo $@ | awk -F ";" '{ print $7 }')
+        	id_situacao_vinculo=$(get_from_table "$situacao_vinculo" $dir_destino/SituacaoVinculo.data)
+        	if [ "AA$situacao_vinculo" = "AAREGULAR" ]; then
+                	periodo=$periodo_atual
+        	else
+                	periodo=$(echo $@ | awk -F ";" '{ print $8 }')
+        	fi
+		echo "$cpf;$mat_vinculo;;;$id_curso;$id_situacao_vinculo;$periodo;;;;;;;;;;;;;;;;;;;;" >> $dir_destino/DiscenteVinculo.tmp 
 	fi
-	echo $cpf";"$mat_vinculo";"$id_curso";"$id_situacao_vinculo";"$periodo >> $dir_destino/DiscenteVinculo.data
 }
 
 function process_input_disciplina() {
@@ -158,7 +178,7 @@ function process_input_aluno_disciplina() {
 	codigo=$(echo $@ | awk -F ";" '{ print $3 }')
 	turma=$(echo $@ | awk -F ";" '{ print $4 }')
 	periodo=$(echo $@ | awk -F ";" '{ print $5 }')
-	mat=$(echo $@ | awk -F ";" '{ print $6 }')
+	matricula=$(echo $@ | awk -F ";" '{ print $6 }')
 	ncampos=$(expr $(echo $@ | awk -F ";" '{ print NF }') - 2)
 	notas=""
 	nnotas=$(expr $max_nnotas - $(expr $max_campos - $ncampos))
@@ -173,15 +193,15 @@ function process_input_aluno_disciplina() {
 	done
 	parcial=$(echo $@ | awk -F ";" '{ print $(NF-3) }')
 	final=$(echo $@ | awk -F ";" '{ print $(NF-2) }')
-	media=$(echo $@ | awk -F ";" '{ print $(NF-1) }')
 	creditos=$(grep "$codigo;$turma;$periodo;$matricula" $dir_fonte/frequencia.csv | awk -F ";" '{ print $5 }')
 	horas=$(grep "$codigo;$turma;$periodo;$matricula" $dir_fonte/frequencia.csv | awk -F ";" '{ print $6 }')
+	media=$(grep "$matricula;$codigo;$periodo;$creditos;$horas" $dir_fonte/disciplinas.csv | awk -F ";" '{ print $8 }')
 	codigo_disciplina=$(get_from_table "$codigo;$creditos;$horas" $dir_destino/Disciplina.data)
 	codigo_turma=$(get_from_table "$codigo_disciplina;$turma;$periodo" $dir_destino/Turma.data)
-	faltas=$(grep "^$codigo;$turma;$periodo;$matricula" $dir_fonte/frequencia.csv | tail -1 | awk -F ";" '{ print $5 }')
+	faltas=$(grep "^$codigo;$turma;$periodo;$matricula" $dir_fonte/frequencia.csv | tail -1 | awk -F ";" '{ print $7 }' | sed -e 's, $,,')
 	situacao=$(grep "$matricula;$codigo;$periodo" $dir_fonte/disciplinas.csv | head -1 | awk -F ";" '{ print $9 }')
 	situacao_id=$(get_from_table "$situacao" $dir_destino/SituacaoDisciplina.data)
-	echo $mat";"$codigo_turma";"$faltas$notas";"$parcial";"$final";"$media";"$situacao_id >> $dir_destino/DiscenteDisciplina.data
+	echo $matricula";"$codigo_turma";"$faltas$notas";"$parcial";"$final";"$media";"$situacao_id >> $dir_destino/DiscenteDisciplina.data
 }
 
 function process_falta() {
@@ -207,10 +227,10 @@ function generate_headers() {
 	echo "descricao" > $dir_destino/Cota.header
 	echo "nome" > $dir_destino/Curso.header
 	echo "descricao" > $dir_destino/Deficiencia.header
-	echo "cpf;nome;id_situacao;semestre_situacao;id_ingresso;semestre_ingresso;ano_nascimento;id_cota;id_tipo_escola;ano_conclusao_ensino_medio;email;id_genero;id_estado_civil;id_nacionalidade;id_pais_origem;id_naturalidade;id_cor" > $dir_destino/Discente.header
+	echo "cpf;nome;ano_nascimento;email;id_genero;id_estado_civil;id_nacionalidade;id_pais_origem;id_naturalidade;id_cor" > $dir_destino/Discente.header
 	echo "cpf;id_deficiencia" > $dir_destino/DiscenteDeficiencia.header
 	echo "matricula;id_turma;num_faltas;nota1;nota2;nota3;nota4;nota5;nota6;nota7;nota8;media_parcial;prova_final;media_final;id_situacao" > $dir_destino/DiscenteDisciplina.header
-	echo "cpf;matricula;id_curso;id_situacao_vinculo;semestre_vinculo" > $dir_destino/DiscenteVinculo.header
+	echo "cpf;matricula;id_ingresso;semestre_ingresso;id_curso;id_situacao;semestre_situacao;id_situacao_vinculo;id_cota;id_tipo_escola;ano_conclusao_ensino_medio;curriculo;carga_hor_obrig_int;cred_obrig_int;carga_hor_opt_int;cred_opt_int;carga_hor_comp_int;cred_comp_int;cra;mc;iea;per_int;tranc;mat_inst;mob_estudantil;cred_matriculados;media_geral_ingresso" > $dir_destino/DiscenteVinculo.header
 	echo "codigo;creditos;horas;nome" > $dir_destino/Disciplina.header
 	echo "descricao" > $dir_destino/Escola.header
 	echo "descricao" > $dir_destino/EstadoCivil.header
@@ -252,6 +272,7 @@ function generate_headers() {
 }
 
 export -f get_from_table
+export -f get_ultima_matricula_from_cpf
 export -f get_cpf_from_matricula
 export -f process_line
 export -f process_input_cadastro
@@ -267,12 +288,12 @@ dir_destino=$2
 periodo_atual=$3
 
 mkdir -p $dir_destino
-rm -f $dir_fonte/cpf-mat-mapping.csv
+touch $dir_fonte/cpf-mat-mapping.csv
 
-cat $dir_fonte/cadastro.csv | awk -F ";" '{ print $4 }' | awk '{ print $1 }' | sort | uniq > $dir_destino/SituacaoDiscente.data
+cat $dir_fonte/cadastro.csv | awk -F ";" '{ print $4 }' | awk '{ print $1 }' | sed -e 's, *$,,' | sort | uniq > $dir_destino/SituacaoDiscente.data
 cat $dir_fonte/cadastro.csv | awk -F ";" '{ print $4 }' | grep "Inativo" | awk -F "(" '{ print $2 }' | awk '{ $NF=""; print $0 }' | sed 's, $,,' | sort | uniq > $dir_fonte/situacao_vinculo.tmp
 cat $dir_fonte/vinculo.csv | awk -F ";" '{ print $4 }' | sort | uniq >> $dir_fonte/situacao_vinculo.tmp
-sort $dir_fonte/situacao_vinculo.tmp | uniq > $dir_destino/SituacaoVinculo.data
+sort $dir_fonte/situacao_vinculo.tmp | sed -e 's, *$,,' | uniq > $dir_destino/SituacaoVinculo.data
 rm $dir_fonte/situacao_vinculo.tmp
 
 cat $dir_fonte/cadastro.csv | awk -F ";" '{ print $5 }' | sort | uniq > $dir_fonte/ingresso.tmp
@@ -288,7 +309,7 @@ w
 q
 !
 
-cat $dir_fonte/cadastro.csv | awk -F ";" '{ print $6 }' | sort | uniq > $dir_destino/Cota.data
+cat $dir_fonte/cadastro.csv | awk -F ";" '{ print $6 }' | sed -e 's, *$,,' | sort | uniq > $dir_destino/Cota.data
 ed -s $dir_destino/Cota.data > /dev/null 2>&1 <<!
 1
 /^$/s,,Não registrada,
@@ -296,7 +317,7 @@ w
 q
 !
 
-cat $dir_fonte/cadastro.csv | awk -F ";" '{ print $8 }' | sort | uniq > $dir_destino/Escola.data
+cat $dir_fonte/cadastro.csv | awk -F ";" '{ print $8 }' | sed -e 's, *$,,' | sort | uniq > $dir_destino/Escola.data
 ed -s $dir_destino/Escola.data > /dev/null 2>&1 <<!
 1
 /^$/s,,Não registrada,
@@ -304,8 +325,8 @@ w
 q
 !
 
-cat $dir_fonte/cadastro.csv | awk -F ";" '{ print $11 }' | sort | uniq > $dir_destino/Genero.data
-cat $dir_fonte/cadastro.csv | awk -F ";" '{ print $12 }' | sort | uniq > $dir_destino/EstadoCivil.data
+cat $dir_fonte/cadastro.csv | awk -F ";" '{ print $11 }' | sed -e 's, *$,,' | sort | uniq > $dir_destino/Genero.data
+cat $dir_fonte/cadastro.csv | awk -F ";" '{ print $12 }' | sed -e 's, *$,,' | sort | uniq > $dir_destino/EstadoCivil.data
 ed -s $dir_destino/EstadoCivil.data > /dev/null 2>&1 <<!
 1
 /^$/s,,Não registrado,
@@ -313,8 +334,8 @@ w
 q
 !
 
-cat $dir_fonte/cadastro.csv | awk -F ";" '{ print $13 }' | sort | uniq > $dir_destino/Nacionalidade.data
-cat $dir_fonte/cadastro.csv | awk -F ";" '{ print $14 }' | sort | uniq > $dir_destino/Pais.data
+cat $dir_fonte/cadastro.csv | awk -F ";" '{ print $13 }' | sed -e 's, *$,,' | sort | uniq > $dir_destino/Nacionalidade.data
+cat $dir_fonte/cadastro.csv | awk -F ";" '{ print $14 }' | sed -e 's, *$,,' | sort | uniq > $dir_destino/Pais.data
 cat $dir_fonte/cadastro.csv | awk -F ";" '{ print $15 }' | sort | uniq | awk -F " - " '{ print $1";"$2 }' > $dir_destino/Naturalidade.data
 ed -s $dir_destino/Naturalidade.data > /dev/null 2>&1 <<!
 1
@@ -323,21 +344,28 @@ w
 q
 !
 
-cat $dir_fonte/cadastro.csv | awk -F ";" '{ print $16 }' | sort | uniq > $dir_destino/Cor.data
+cat $dir_fonte/cadastro.csv | awk -F ";" '{ print $16 }' | sed -e 's, *$,,' | sort | uniq > $dir_destino/Cor.data
 cat $dir_fonte/cadastro.csv | awk -F ";" '{ print $17 }' | tr ',' '\n' | sed 's,^ ,,' | sort | uniq > $dir_destino/Deficiencia.data
-cat $dir_fonte/vinculo.csv | awk -F ";" '{ print $3 }' | sort | uniq > $dir_destino/Curso.data
+cat $dir_fonte/vinculo.csv | awk -F ";" '{ print $3 }' | sed -e 's, *$,,' | sort | uniq > $dir_destino/Curso.data
 
-rm -f $dir_destino/Discente.data $dir_destino/DiscenteDeficiencia.data $dir_destino/DiscenteVinculo.data
+rm -f $dir_destino/DiscenteVinculo.tmp $dir_destino/DiscenteDeficiencia.tmp $dir_destino/Discente.data $dir_destino/cpf-mat-mapping.csv
 cat $dir_fonte/cadastro.csv | awk -v f=$dir_fonte -v d=$dir_destino -v p=$periodo_atual '{ system("bash -c '\'' process_line process_input_cadastro \""f";"d";"p";"$0"\" '\'' ") }'
+rm -f $dir_destino/ultima-matricula.csv $dir_destino/ultima-matricula.tmp $dir_destino/Discente.tmp
+cat $dir_destino/DiscenteDeficiencia.tmp | sort | uniq > $dir_destino/DiscenteDeficiencia.data
+rm $dir_destino/DiscenteDeficiencia.tmp
+paste -d ';' $dir_destino/DiscenteVinculo.tmp $dir_fonte/historico.csv > $dir_destino/DiscenteVinculo.data
+rm -f $dir_destino/DiscenteVinculo.tmp
 cat $dir_fonte/vinculo.csv | awk -v f=$dir_fonte -v d=$dir_destino -v p=$periodo_atual '{ system("bash -c '\'' process_line process_input_vinculo \""f";"d";"p";"$0"\" '\'' ") }'
+cat $dir_destino/DiscenteVinculo.tmp | sort | uniq >> $dir_destino/DiscenteVinculo.data
+rm -f $dir_destino/DiscenteVinculo.tmp $dir_destino/cpf-mat-mapping.csv
 
 rm -f $dir_destino/Disciplina.data
-cat $dir_fonte/disciplinas.csv | awk -F ";" '{ print $2";"$4";"$5";"$6";"$7 }' | sort | uniq > $dir_fonte/disciplina.tmp
-cat $dir_fonte/disciplina.tmp | awk -F ";" '{ print $5 }' | sort | uniq > $dir_destino/Tipo.data
+cat $dir_fonte/disciplinas.csv | awk -F ";" '{ print $2";"$4";"$5";"$6";"$7 }' | sed -e 's, *$,,' | sort | uniq > $dir_fonte/disciplina.tmp
+cat $dir_fonte/disciplina.tmp | awk -F ";" '{ print $5 }' | sed -e 's, *$,,' | sort | uniq > $dir_destino/Tipo.data
 cat $dir_fonte/disciplina.tmp | awk -v f=$dir_fonte -v d=$dir_destino '{ system("bash -c '\'' process_line process_input_disciplina \""f";"d";"$0"\" '\'' ") }'
 rm $dir_fonte/disciplina.tmp
 
-cat $dir_fonte/disciplinas.csv | awk -F ";" '{ print $9 }' | sort | uniq > $dir_destino/SituacaoDisciplina.data
+cat $dir_fonte/disciplinas.csv | awk -F ";" '{ print $9 }' | sed -e 's, *$,,' | sort | uniq > $dir_destino/SituacaoDisciplina.data
 
 # Fix data
 
@@ -451,8 +479,8 @@ w
 q
 !
 
-cat $dir_fonte/resumo.csv | awk -F ";" '{ print $8 }' | sort | uniq > $dir_destino/Horario.data
-cat $dir_fonte/resumo.csv | awk -F ";" '{ print $9 }' | sort | uniq > $dir_destino/Sala.data
+cat $dir_fonte/resumo.csv | awk -F ";" '{ print $8 }' | sed -e 's, *$,,' | sort | uniq > $dir_destino/Horario.data
+cat $dir_fonte/resumo.csv | awk -F ";" '{ print $9 }' | sed -e 's, *$,,' | sort | uniq > $dir_destino/Sala.data
 cat $dir_fonte/resumo.csv | awk -F ";" '{ print $1";"$5";"$6";"$2 }' | tr -s ' ' | sort | uniq > $dir_destino/Disciplina.data
 
 # Incluir uma disciplina vazia

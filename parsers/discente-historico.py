@@ -105,7 +105,7 @@ try:
     me = indices[3].text
 
     # cm = créditos matriculados
-    if situacao in ['GRADUADO', 'CANCELADO', 'CANCELAMENTO']:
+    if situacao in ['GRADUADO', 'CANCELADO', 'CANCELAMENTO', 'TRANSFERIDO']:
         cm = '0'
     else:
         cm = indices[4].text

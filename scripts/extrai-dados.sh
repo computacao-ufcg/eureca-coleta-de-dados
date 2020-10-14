@@ -43,7 +43,7 @@ do
 	python $dir_parsers/discente-vinculo.py $dir_fonte/discentes/$i-historico.html >> $dir_destino/vinculo.csv
 done
 
-rm $dir_destino/matriculas.dat $dir_destino/disciplinas.tmp
+rm -f $dir_destino/matriculas.dat $dir_destino/disciplinas.tmp
 
 rm -rf $dir_destino/resumo.csv $dir_destino/nota.csv $dir_destino/frequencia.csv
 
