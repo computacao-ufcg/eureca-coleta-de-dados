@@ -111,7 +111,7 @@ function process_input_cadastro() {
 		situacao_vinculo=$(echo $@ | awk -F ";" '{ print $7 }' | awk -F "(" '{ print $2 }' | awk '{ $NF=""; print $0 }' | sed -e 's, $,,')
 		id_situacao_vinculo=$(get_from_table "$situacao_vinculo" $dir_destino/SituacaoVinculo.data)
 	fi
-	echo "$cpf;$mat;$ingresso_tipo;$semestre_ingresso;$id_curso;$situacao_tipo;$semestre_situacao;$cota;$inst;$conclusao" >> $dir_destino/DiscenteVinculo.tmp
+	echo "$cpf;$mat;$ingresso_tipo;$semestre_ingresso;$id_curso;$situacao_tipo;$semestre_situacao;$id_situacao_vinculo;$cota;$inst;$conclusao" >> $dir_destino/DiscenteVinculo.tmp
 }
 
 function process_input_vinculo() {
@@ -124,6 +124,7 @@ function process_input_vinculo() {
 		cpf=$(get_cpf_from_matricula $mat)
 		mat_vinculo=$(echo $@ | awk -F ";" '{ print $5 }')
 		id_curso=$(get_from_table "$(echo $@ | awk -F ";" '{ print $6 }')" $dir_destino/Curso.data)
+		situacao_tipo=$(get_from_table "Inativo" $dir_destino/SituacaoDiscente.data)
 		situacao_vinculo=$(echo $@ | awk -F ";" '{ print $7 }')
         	id_situacao_vinculo=$(get_from_table "$situacao_vinculo" $dir_destino/SituacaoVinculo.data)
         	if [ "AA$situacao_vinculo" = "AAREGULAR" ]; then
@@ -131,7 +132,7 @@ function process_input_vinculo() {
         	else
                 	periodo=$(echo $@ | awk -F ";" '{ print $8 }')
         	fi
-		echo "$cpf;$mat_vinculo;;;$id_curso;$id_situacao_vinculo;$periodo;;;;;;;;;;;;;;;;;;;;" >> $dir_destino/DiscenteVinculo.tmp 
+		echo "$cpf;$mat_vinculo;;;$id_curso;$situacao_tipo;$periodo;$id_situacao_vinculo;;;;;;;;;;;;;;;;;;;" >> $dir_destino/DiscenteVinculo.tmp 
 	fi
 }
 
@@ -288,7 +289,6 @@ dir_destino=$2
 periodo_atual=$3
 
 mkdir -p $dir_destino
-touch $dir_fonte/cpf-mat-mapping.csv
 
 cat $dir_fonte/cadastro.csv | awk -F ";" '{ print $4 }' | awk '{ print $1 }' | sed -e 's, *$,,' | sort | uniq > $dir_destino/SituacaoDiscente.data
 cat $dir_fonte/cadastro.csv | awk -F ";" '{ print $4 }' | grep "Inativo" | awk -F "(" '{ print $2 }' | awk '{ $NF=""; print $0 }' | sed 's, $,,' | sort | uniq > $dir_fonte/situacao_vinculo.tmp
