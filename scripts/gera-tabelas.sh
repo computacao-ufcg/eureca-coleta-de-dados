@@ -143,8 +143,10 @@ function process_input_disciplina() {
 	creditos=$(echo $@ | awk -F ";" '{ print $4 }')
 	horas=$(echo $@ | awk -F ";" '{ print $5 }')
 	nome=$(echo $@ | awk -F ";" '{ print $6 }')
-        tipo_str=$(echo $@ | awk -F ";" '{ print $7 }')
-        tipo=$(get_from_table "$tipo_str" $dir_destino/Tipo.data)
+	tipo=$(grep $codigo $dir_destino/Curriculo.data | awk -F ";" '{ print $2 }')
+	if [ "AA$tipo" = "AA" ]; then
+		tipo=$(get_from_table "Extracurricular" $dir_destino/TipoDisciplina.data)
+	fi
 	echo $codigo";"$tipo";"$creditos";"$horas";"$nome >> $dir_destino/Disciplina.data
 }
 
@@ -247,9 +249,11 @@ function generate_headers() {
 	echo "descricao" > $dir_destino/SituacaoDiscente.header
 	echo "descricao" > $dir_destino/SituacaoDisciplina.header
 	echo "descricao" > $dir_destino/SituacaoVinculo.header
-	echo "descricao" > $dir_destino/Tipo.header
+	echo "descricao" > $dir_destino/TipoDisciplina.header
 	echo "id_disciplina;turma;periodo;id_horario;id_sala" > $dir_destino/Turma.header
 	echo "id_turma;siape" > $dir_destino/TurmaProfessor.header
+	echo "codigo_disciplina;id_tipo_disciplina;id_unidade_academica" > $dir_destino/Curriculo.header
+	echo "descricao" > $dir_destino/UnidadeAcademica.header 
 
 	echo "Cor" > $dir_destino/autoincrement.list
         echo "Cota" >> $dir_destino/autoincrement.list
@@ -268,8 +272,9 @@ function generate_headers() {
         echo "SituacaoDiscente" >> $dir_destino/autoincrement.list
         echo "SituacaoDisciplina" >> $dir_destino/autoincrement.list
         echo "SituacaoVinculo" >> $dir_destino/autoincrement.list
-        echo "Tipo" >> $dir_destino/autoincrement.list
+        echo "TipoDisciplina" >> $dir_destino/autoincrement.list
         echo "Turma" >> $dir_destino/autoincrement.list
+	echo "UnidadeAcademica" >> $dir_destino/autoincrement.list
 }
 
 export -f get_from_table
@@ -289,6 +294,121 @@ dir_destino=$2
 periodo_atual=$3
 
 mkdir -p $dir_destino
+
+cat > $dir_destino/TipoDisciplina.data <<!
+Obrigatória
+Optativa geral
+Optativa específica
+Complementar
+Extracurricular
+!
+
+cat > $dir_destino/UnidadeAcademica.data <<!
+Unidade Acadêmica de Sistemas e Computação
+Unidade Acadêmica de Estatística
+Unidade Acadêmica de Matemática
+Outra
+!
+
+cat > $dir_destino/Curriculo.data <<!
+1108030;2;4
+1108081;2;4
+1108100;2;4
+1108105;2;4
+1109035;2;3
+1109049;1;3
+1109053;1;3
+1109103;1;3
+1109126;1;3
+1109128;2;3
+1109131;1;3
+1114129;1;2
+1114222;1;2
+1301123;2;4
+1302123;3;1
+1303021;2;4
+1305218;1;4
+1305219;2;4
+1307150;2;4
+1307169;2;4
+1307332;2;4
+1411167;1;1
+1411168;1;1
+1411171;1;1
+1411174;1;1
+1411180;1;1
+1411181;1;1
+1411182;1;1
+1411185;1;1
+1411187;1;1
+1411188;3;1
+1411189;1;1
+1411190;1;1
+1411192;1;1
+1411193;1;1
+1411194;3;1
+1411197;3;1
+1411198;3;1
+1411200;3;1
+1411209;3;1
+1411213;3;1
+1411217;3;1
+1411221;3;1
+1411222;3;1
+1411290;3;1
+1411302;3;1
+1411305;1;1
+1411306;1;1
+1411307;1;1
+1411308;1;1
+1411309;1;1
+1411310;1;1
+1411311;1;1
+1411312;1;1
+1411313;1;1
+1411314;1;1
+1411315;1;1
+1411316;1;1
+1411317;4;1
+1411318;4;1
+1411319;4;1
+1411320;3;1
+1411321;3;1
+1411322;3;1
+1411323;3;1
+1411324;3;1
+1411325;3;1
+1411326;3;1
+1411327;3;1
+1411328;3;1
+1411329;3;1
+1411330;3;1
+1411331;3;1
+1411332;3;1
+1411333;3;1
+1411334;3;1
+1411335;3;1
+1411336;3;1
+1411337;3;1
+1411338;3;1
+1411339;3;1
+1411340;3;1
+1411342;3;1
+1411343;3;1
+1411344;3;1
+1411345;2;4
+1411348;1;1
+1411349;3;1
+1411350;3;1
+1411351;3;1
+1411352;3;1
+1411353;3;1
+1411354;3;1
+1411355;3;1
+1411356;3;1
+1411357;3;1
+1411358;3;1
+!
 
 cat $dir_fonte/cadastro.csv | awk -F ";" '{ print $4 }' | awk '{ print $1 }' | sed -e 's, *$,,' | sort | uniq > $dir_destino/SituacaoDiscente.data
 cat $dir_fonte/cadastro.csv | awk -F ";" '{ print $4 }' | grep "Inativo" | awk -F "(" '{ print $2 }' | awk '{ $NF=""; print $0 }' | sed 's, $,,' | sort | uniq > $dir_fonte/situacao_vinculo.tmp
@@ -361,7 +481,6 @@ rm -f $dir_destino/DiscenteVinculo.tmp $dir_destino/cpf-mat-mapping.csv
 
 rm -f $dir_destino/Disciplina.data
 cat $dir_fonte/disciplinas.csv | awk -F ";" '{ print $2";"$4";"$5";"$6";"$7 }' | sed -e 's, *$,,' | sort | uniq > $dir_fonte/disciplina.tmp
-cat $dir_fonte/disciplina.tmp | awk -F ";" '{ print $5 }' | sed -e 's, *$,,' | sort | uniq > $dir_destino/Tipo.data
 cat $dir_fonte/disciplina.tmp | awk -v f=$dir_fonte -v d=$dir_destino '{ system("bash -c '\'' process_line process_input_disciplina \""f";"d";"$0"\" '\'' ") }'
 rm $dir_fonte/disciplina.tmp
 
@@ -469,12 +588,6 @@ q
 
 ed -s $dir_destino/Genero.data > /dev/null 2>&1 <<!
 g/Vivo/s,,Viúvo
-w
-q
-!
-
-ed -s $dir_destino/Tipo.data > /dev/null 2>&1 <<!
-g/Obrigatria/s,,Obrigatória
 w
 q
 !
