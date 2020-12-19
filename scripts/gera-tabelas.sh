@@ -132,7 +132,7 @@ function process_input_vinculo() {
         	else
                 	periodo=$(echo $@ | awk -F ";" '{ print $8 }')
         	fi
-		echo "$cpf;$mat_vinculo;;;$id_curso;$situacao_tipo;$periodo;$id_situacao_vinculo;;;;;;;;;;;;;;;;;;;" >> $dir_destino/DiscenteVinculo.tmp 
+		echo "$cpf;$mat_vinculo;1;;$id_curso;$situacao_tipo;$periodo;$id_situacao_vinculo;1;1;;;-1;-1;-1;-1;-1;-1;-1;-1;-1;-1;-1;-1;-1;-1;-1" >> $dir_destino/DiscenteVinculo.tmp 
 	fi
 }
 
@@ -234,17 +234,17 @@ function generate_headers() {
 	echo "cpf;id_deficiencia" > $dir_destino/DiscenteDeficiencia.header
 	echo "matricula;id_turma;num_faltas;nota1;nota2;nota3;nota4;nota5;nota6;nota7;nota8;media_parcial;prova_final;media_final;id_situacao" > $dir_destino/DiscenteDisciplina.header
 	echo "cpf;matricula;id_ingresso;semestre_ingresso;id_curso;id_situacao;semestre_situacao;id_situacao_vinculo;id_cota;id_tipo_escola;ano_conclusao_ensino_medio;curriculo;carga_hor_obrig_int;cred_obrig_int;carga_hor_opt_int;cred_opt_int;carga_hor_comp_int;cred_comp_int;cra;mc;iea;per_int;tranc;mat_inst;mob_estudantil;cred_matriculados;media_geral_ingresso" > $dir_destino/DiscenteVinculo.header
-	echo "codigo;creditos;horas;nome" > $dir_destino/Disciplina.header
+	echo "codigo;tipo;creditos;horas;nome" > $dir_destino/Disciplina.header
 	echo "descricao" > $dir_destino/Escola.header
 	echo "descricao" > $dir_destino/EstadoCivil.header
 	echo "matricula;id_turma;num_aula" > $dir_destino/Falta.header
 	echo "descricao" > $dir_destino/Genero.header
 	echo "descricao" > $dir_destino/Horario.header
 	echo "descricao" > $dir_destino/Ingresso.header
-	echo "municipio,estado" > $dir_destino/Naturalidade.header
+	echo "municipio;estado" > $dir_destino/Naturalidade.header
 	echo "descricao" > $dir_destino/Nacionalidade.header
 	echo "nome" > $dir_destino/Pais.header
-	echo "siape" > $dir_destino/Professor.header
+	echo "siape;nome" > $dir_destino/Professor.header
 	echo "nome" > $dir_destino/Sala.header
 	echo "descricao" > $dir_destino/SituacaoDiscente.header
 	echo "descricao" > $dir_destino/SituacaoDisciplina.header
@@ -600,13 +600,18 @@ cat $dir_fonte/resumo.csv | awk -F ";" '{ print $1";"$5";"$6";"$2 }' | tr -s ' '
 ed -s $dir_destino/Disciplina.data > /dev/null 2>&1 <<!
 1
 i
-0000000;0;0;DISCIPLINA NÃO ENCONTRADA
+0000000;5;0;0;DISCIPLINA NÃO ENCONTRADA
 .
 w
 q
 !
 
 cat $dir_fonte/resumo.csv | awk -F ";" '{  print $3 }' | awk -F "," '{ print $1"\n"$2"\n"$3 }' | sort | uniq > $dir_destino/Professor.data
+ed $dir_destino/Professor.data > /dev/null 2>&1 <<!
+g/$/s,,;anônimo
+w
+q
+!
 
 rm -f $dir_destino/Turma.data $dir_destino/TurmaProfessor.data
 cat $dir_fonte/resumo.csv | awk -v f=$dir_fonte -v d=$dir_destino -v t=0 '{ t=t+1; system("bash -c '\'' process_line process_input_turma_professor \""f";"d";"t";"$0"\" '\'' ") }'
