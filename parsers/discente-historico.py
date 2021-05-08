@@ -97,7 +97,13 @@ try:
     
     # cra, mc, iea
     aluno = soup.find_all("div", class_="col-md-2 col-sm-2")
-    cra, mc, iea = aluno[0].text, aluno[1].text, aluno[2].text
+    cra, mc = aluno[0].text, aluno[1].text
+    
+    # iea
+    iea = aluno[2].text
+    if iea == "inf":
+        iea = str(sys.float_info.max)
+
 
     # pi = períodos integralizados, tt = trancamentos totais
     # mi = matrículas institucionais, me = mobilidade estudantil
