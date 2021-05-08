@@ -4,6 +4,7 @@ import codecs
 from bs4 import BeautifulSoup
 import sys, os
 import glob
+import traceback
 
 # código de cores para o menu de ajuda do comando
 RED = "\033[1;31m"  
@@ -105,7 +106,7 @@ try:
     me = indices[3].text
 
     # cm = créditos matriculados
-    if situacao in ['GRADUADO', 'CANCELADO', 'CANCELAMENTO', 'TRANSFERIDO']:
+    if situacao in ['GRADUADO', 'CANCELADO', 'CANCELAMENTO', 'TRANSFERIDO', 'CONCLUIDO']:
         cm = '0'
     else:
         cm = indices[4].text
@@ -137,4 +138,4 @@ try:
     print output
 
 except Exception as e:
-    print e
+    print traceback.format_exc()
