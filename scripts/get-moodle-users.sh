@@ -24,5 +24,5 @@ do
 	python $dir_parsers/discente-cadastro.py $dir_destino/$i-cadastro.html >>  $dir_destino/cadastro.csv
 done
 
-cat $dir_destino/cadastro.csv |  awk -F ";" '{ print $1","$7","$3","$10 }' | awk -F "/" '{ print $1 $2 $3 }' | awk '{ print $1","; for(i=2; i<=NF; i++) print $i }' | tr '\n' ' ' | sed -e 's., .,.g' | sed -e 's. 1.#1.g' | tr '#' '\n' > $dir_destino/crendenciais.csv
+cat $dir_destino/cadastro.csv |  awk -F ";" '{ print $1","$7","$3","$10 }' | awk -F "/" '{ print $1 $2 $3 }' | awk '{ print $1","; for(i=2; i<=NF; i++) print $i }' | tr '\n' ' ' | sed -e 's., .,.g' | sed -e 's. 1.#1.g' | tr '#' '\n' > $dir_destino/credenciais.csv
 
