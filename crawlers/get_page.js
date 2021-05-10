@@ -8,6 +8,7 @@ var argv = require('minimist')(process.argv.slice(2));
 if (!("login" in argv)) {
     console.log('missing login properties file!');
     console.log('usage: node get_page.js --l=link --p=periodo --o=output.html --login=login.properties');
+    console.log('example of login.properties: login,password,CoordenacaoLogin');
     proc.exit();
 }
 else {
