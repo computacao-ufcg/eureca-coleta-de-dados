@@ -2,8 +2,8 @@
 
 matriculas=$1
 credenciais=$2
-dir_destino=$4
-dir_scripts=$5
+dir_destino=$3
+dir_scripts=$4
 
 dir_parsers=$dir_scripts/../parsers
 
