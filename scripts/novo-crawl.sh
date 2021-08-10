@@ -28,10 +28,10 @@ dir_scripts=$5
 
 mkdir -p $dir_destino/discentes
 
-credencial=$dir_destino/credencial
+credencial=$dir_destino/credencial.tmp
 touch $credencial
 chmod 600 $credencial
-cat $login | sed -e 's,$,\,CoordenacaoLogin,' > $credencial
+cp $login $credencial
 
 for i in `cat $matriculas`
 do
@@ -49,4 +49,4 @@ do
 	cat $dir_destino/turmas.tmp | awk -v p=$i -v c=$credencial -v d=$dir_destino -v s=$dir_scripts '{ system("bash -c '\'' process_line process_turmas \""p"\" \""c"\" \""d"\" \""s"\" \""$0"\" '\'' ") }'
 	rm $dir_destino/$i-turmas-ofertadas.html
 done
-rm $dir_destino/turmas.tmp
+rm $dir_destino/turmas.tmp $credencial
