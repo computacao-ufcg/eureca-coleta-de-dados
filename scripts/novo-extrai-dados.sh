@@ -73,9 +73,9 @@ done
 
 rm -f $dir_destino/*.tmp
 
-echo "code;term;classId;teachers" > $dir_destino/classes.header
-echo "registration;code;term;classId;credits;grade;status" > $dir_destino/enrollments.header
-echo "registration;nationalId;name;statusStr;admissionStr;affirmativePolicy;birthDate;secondarySchool;secondarySchoolGraduationYear;email;gender;maritalStatus;nationality;country;placeOfBirth;race;disabilities;course;curriculum;mandatoryHours;mandatoryCredits;electiveHours;electiveCredits;complementaryHours;complementaryCredits;gpa;mc;iea;completedTerms;suspendedTerms;institutionalEnrollments;mobilityTerms;enrolledCredits;admissionGrade" > $dir_destino/students.header
+echo "subjectCode;term;classId;teachers" > $dir_destino/classes.header
+echo "registration;subjectCode;term;classId;credits;grade;status" > $dir_destino/enrollments.header
+echo "registration;nationalId;name;statusStr;admissionStr;affirmativePolicy;birthDate;secondarySchool;secondarySchoolGraduationYear;email;gender;maritalStatus;nationality;country;placeOfBirth;race;disabilities;courseCode;curriculumCode;mandatoryHours;mandatoryCredits;optionalHours;optionalCredits;complementaryHours;complementaryCredits;gpa;mc;iea;completedTerms;suspendedTerms;institutionalEnrollments;mobilityTerms;enrolledCredits;admissionGrade" > $dir_destino/students.header
 echo "" > $dir_destino/classes.number
 echo "credits;grade" > $dir_destino/enrollments.number
 echo "mandatoryHours;mandatoryCredits;electiveHours;electiveCredits;complementaryHours;complementaryCredits;gpa;mc;iea;termsCount;suspendedTerms;institutionalEnrollments;mobilityTerms;enrolledCredits;admissionGrade" > $dir_destino/students.number

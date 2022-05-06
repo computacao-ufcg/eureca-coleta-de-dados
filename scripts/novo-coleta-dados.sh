@@ -4,8 +4,8 @@
 # do curso (ex. 14102100 é o código de Ciência da Computação). O segundo parâmetro é um arquivo que contém a
 # lista de matriculas (uma por linha) dos discentes cujos dados serão coletados. O terceiro parâmetro é um
 # arquivo que contém a lista de periodos (um por linha) no formato (AAAA.P, ex. 2020.1) cujos dados serão
-coletados. O quarto parâmetro é o arquivo que contém a credencial da coordenacao para acesso ao SCAO. O quinto
-# parâmetro é o nome do diretório onde os dados coletados serão armazenados.
+# coletados. O quarto parâmetro é o arquivo que contém a credencial da coordenacao para acesso ao SCAO.
+# O quinto parâmetro é o nome do diretório onde os dados coletados serão armazenados.
 
 print_sintax() {
 	echo "Sintaxe: $0 matriculas periodos credencial dir_destino [true]"
