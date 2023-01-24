@@ -3,15 +3,41 @@
 periodo=$1
 input=$2
 output_dir=$3
+mapping=$4
 
-cat $input | grep ^1$periodo | awk -F ";" '{ print $3","$7 }' | sed -e 's,/,,g' > $output_dir/tmp.out
-cat $output_dir/tmp.out | awk '{ print toupper(substr($1,1,1)) tolower(substr($1,2)) }' > $output_dir/first.out
-cat $output_dir/tmp.out | awk -F "," '{ print $1 }' | awk '{ for(i=2; i<=NF; i++) print toupper(substr($i,1,1)) tolower(substr($i,2)); print "#" }' | tr '\n' ' ' | tr '#' '\n' | sed -e 's,^ ,,g' | sed -e 's, $,,g' > $output_dir/last.out
-cat $output_dir/tmp.out | awk '{ for(i=1; i<=NF; i++) print toupper( substr( $i, 1, 1 ) ) substr( $i, 2 ) }' | awk '{ print $1","$2" "$3" "$4" "$5" "$6" "$7 }' | sed -e 's, *$,,' > $output_dir/first-last.out
-cat $output_dir/tmp.out | awk -F "," '{ print $1 }' | awk '{ print tolower($1)"."tolower($NF)"@ccc.ufcg.edu.br" }' > $output_dir/email.out
-cat $output_dir/tmp.out | awk -F "," '{ print $2 }' > $output_dir/passwd.out
-cat $input | grep ^1$periodo | awk -F ";" '{ print ",/,"$10 }' > $output_dir/others.out
-paste -d ',' $output_dir/first.out $output_dir/last.out $output_dir/email.out $output_dir/passwd.out $output_dir/others.out > $output_dir/tmp.out
+mkdir -p $output_dir
+
+cat $input | grep ^1$periodo | awk -F ";" '{ print $1";"$3";"$7";"$10 }' | sed -e 's,/,,g' > $output_dir/tmp.out
+
+cat $output_dir/tmp.out | awk -F ";" '{ print $1 }' > $output_dir/mat.out
+
+cat $output_dir/tmp.out | awk -F ";" '{ print $2 }' > $output_dir/name.out
+ed $output_dir/name.out <<! > /dev/null
+g/ /s,,\,
+w
+q
+!
+
+cat $output_dir/tmp.out | awk -F ";" '{ print $2 }' | tr '[:upper:]' '[:lower:]' > $output_dir/email.out
+ed $output_dir/email.out <<! > /dev/null
+g/ /s,,\.,g
+g/\.da\./s,,\.,g
+g/\.do\./s,,\.,g
+g/\.de\./s,,\.,g
+g/\.das\./s,,\.,g
+g/\.dos\./s,,\.,g
+g/\.e\./s,,\.,g
+g/\.d\'/s,,\.,g
+g/$/s,,\@ccc\.ufcg\.edu\.br
+w
+q
+!
+
+cat $output_dir/tmp.out | awk -F ";" '{ print $3 }' > $output_dir/passwd.out
+
+cat $output_dir/tmp.out | awk -F ";" '{ print ",/,"$4 }' > $output_dir/others.out
+
+paste -d ',' $output_dir/name.out $output_dir/email.out $output_dir/passwd.out $output_dir/others.out > $output_dir/tmp.out
 ed $output_dir/tmp.out <<! > /dev/null 2>&1
 g/^,*$/d
 g/Joao/s,,João,
@@ -35,5 +61,13 @@ q
 !
 mv $output_dir/tmp.out $output_dir/$periodo.csv
 cat $output_dir/$periodo.csv | awk -F "," '{ print $1" "$2","$3 }' > $output_dir/$periodo.pub
-rm $output_dir/first.out $output_dir/last.out $output_dir/email.out $output_dir/passwd.out $output_dir/others.out
+paste -d ";" $output_dir/mat.out $output_dir/email.out > $output_dir/$periodo.mapping.csv 
+rm -rf $output_dir/taken.list $output_dir/name.out $output_dir/mat.out $output_dir/email.out $output_dir/passwd.out $output_dir/others.out
 
+for i in `cat $output_dir/$periodo.mapping.csv | awk -F ";" '{ print $2 }'`
+do
+	grep ";$i$" $mapping > /dev/null
+	if [ $? == 0 ]; then
+		echo $i >> $output_dir/$periodo.taken
+	fi
+done
