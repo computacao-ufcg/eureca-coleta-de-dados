@@ -71,6 +71,12 @@ do
 	fi
 done
 
+ed $dir_destino/students.data > /dev/null 2>&1 <<!
+g/;nan;/s,,0\,00,g
+w
+q
+!
+
 rm -f $dir_destino/*.tmp
 
 echo "subjectCode;term;classId;teachers" > $dir_destino/classes.header
