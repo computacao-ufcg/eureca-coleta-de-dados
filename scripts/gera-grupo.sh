@@ -9,7 +9,7 @@ dir_scripts=$6
 
 dir_parsers=../parsers
 
-cp $dir_destino/$grupo.fixed.csv $dir_destino/novo-$grupo.csv
+cp $dir_scripts/../private/grupos/$grupo.fixed.csv $dir_destino/$grupo.csv
 
 for i in `cat $matriculas`
 do
@@ -19,10 +19,10 @@ do
 	email2=`grep $i $map | awk -F ";" '{ print $2 }'`
 	nome=`echo $line | awk -F ";" '{ print $3 }'`
 	if [ "AA"$email2 != "AA" ]; then
-		echo "$grupo@ccc.ufcg.edu.br,"$email2","$nome",MEMBER,USER" >> $dir_destino/novo-$grupo.csv
+		echo "$grupo@ccc.ufcg.edu.br,"$email2","$nome",MEMBER,USER" >> $dir_destino/$grupo.csv
 	else
 		if [ "AA"$email1 != "AA" ]; then
-			echo "$grupo@ccc.ufcg.edu.br,"$email1","$nome",MEMBER,USER" >> $dir_destino/novo-$grupo.csv
+			echo "$grupo@ccc.ufcg.edu.br,"$email1","$nome",MEMBER,USER" >> $dir_destino/$grupo.csv
 		else
 			echo "Sem e-mail para $i $nome"
 		fi

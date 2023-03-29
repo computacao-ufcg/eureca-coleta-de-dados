@@ -7,7 +7,7 @@ mapping=$4
 
 mkdir -p $output_dir
 
-cat $input | grep ^1$periodo | awk -F ";" '{ print $1";"$3";"$7";"$10 }' | sed -e 's,/,,g' > $output_dir/tmp.out
+cat $input | grep ^1$periodo | awk -F ";" '{ print $1";"$3";"$7";"$10";"$2 }' | sed -e 's,/,,g' > $output_dir/tmp.out
 
 cat $output_dir/tmp.out | awk -F ";" '{ print $1 }' > $output_dir/mat.out
 
@@ -36,6 +36,18 @@ q
 cat $output_dir/tmp.out | awk -F ";" '{ print $3 }' > $output_dir/passwd.out
 
 cat $output_dir/tmp.out | awk -F ";" '{ print ",/,"$4 }' > $output_dir/others.out
+
+cat $output_dir/tmp.out | awk -F ";" '{ print $5 }' > $output_dir/cpf.out
+for i in `cat $output_dir/cpf.out`
+do
+	grep ";$i;" $input | awk -F ";" '{ print $1 }' > $output_dir/tmp
+	size=`cat $output_dir/tmp | wc -l | sed 's,/^ */,,'`
+	if [ $size -ne 1 ]; then
+		echo "CPF: $i" >> $output_dir/reingresso.dat
+		cat $output_dir/tmp >> $output_dir/reingresso.dat
+	fi
+done
+rm $output_dir/tmp $output_dir/cpf.out
 
 paste -d ',' $output_dir/name.out $output_dir/email.out $output_dir/passwd.out $output_dir/others.out > $output_dir/tmp.out
 ed $output_dir/tmp.out <<! > /dev/null 2>&1
