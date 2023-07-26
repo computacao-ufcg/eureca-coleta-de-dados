@@ -7,7 +7,7 @@ map=$4
 dir_destino=$5
 dir_scripts=$6
 
-dir_parsers=../parsers
+dir_parsers=$dir_scripts/../parsers
 
 cp $dir_scripts/../private/grupos/$grupo.fixed.csv $dir_destino/$grupo.csv
 
