@@ -1,51 +1,28 @@
 #!/bin/bash
 
-function process_line() {
-        $@
-}
-
-function process_frequencia() {
-        dir_destino=$(echo $@ | awk -F ";" '{ print $1 }')
-        disciplina=$(echo $@ | awk -F ";" '{ print $2 }')
-        turma=$(echo $@ | awk -F ";" '{ print $3 }')
-        periodo=$(echo $@ | awk -F ";" '{ print $4 }')
-        matricula=$(echo $@ | awk -F ";" '{ print $5 }')
-        faltas=$(echo $@ | awk -F ";" '{ print $6 }')
-        aulas_p1=$(echo $@ | awk -F ";" '{ for(i=7; i<=NF; i++) print $i";" }' | tr -s '\n' ' ' | sed -e '/; /s,,;,g')
-        aulas_outras=$(grep "$disciplina;$turma;$periodo;$matricula" $dir_destino/frequencia_extra.tmp | awk -F ";" '{for(i = 1; i<=NF; i++) if(i < 6) continue; else print($i";")}' | tr -s '\n' ' ' | sed -e '/; /s,,;,g')
-        aulas=$(echo "$aulas_p1$aulas_outras" | sed -e '/;$/s,,,')
-        creditos=$(grep "$disciplina;$periodo" $dir_destino/disciplinas.csv | head -1 | awk -F ";" '{ print $4 }')
-        horas=$(grep "$disciplina;$periodo" $dir_destino/disciplinas.csv | head -1 | awk -F ";" '{ print $5 }')
-        echo "$disciplina;$turma;$periodo;$matricula;$creditos;$horas;$faltas;$aulas" | sed -e '/;$/s,,,' >> $dir_destino/frequencia.csv
-}
-
-export -f process_line
-export -f process_frequencia
-
-dir_fonte=$1
-dir_destino=$2
-dir_scripts=$3
+curso=$1
+dir_fonte=$2
+dir_destino=$3
+dir_scripts=$4
 
 dir_parsers=$dir_scripts/../parsers
 
-rm -f $dir_destino/cadastro.csv $dir_destino/historico.csv $dir_destino/disciplinas.csv $dir_destino/vinculo.csv
-
 mkdir -p $dir_destino
 
-ls $dir_fonte/discentes | grep cadastro | awk -F "-" '{ print $1 }' > $dir_destino/matriculas.dat 
+rm -f $dir_destino/*.tmp 
+rm -f $dir_destino/students.data
+rm -f $dir_destino/classes.data
+rm -f $dir_destino/enrollments.data
 
-for i in `cat $dir_destino/matriculas.dat`
+echo $curso > /tmp/curso
+ls $dir_fonte/discentes | grep cadastro | awk -F "-" '{ print $1 }' > $dir_destino/matriculas.tmp 
+
+for i in `cat $dir_destino/matriculas.tmp`
 do
-	python $dir_parsers/discente-cadastro.py $dir_fonte/discentes/$i-cadastro.html >> $dir_destino/cadastro.csv
-	python $dir_parsers/discente-historico.py $dir_fonte/discentes/$i-historico.html >> $dir_destino/historico.csv
-	python $dir_parsers/discente-disciplinas.py $dir_fonte/discentes/$i-historico.html > $dir_destino/disciplinas.tmp
-	cat $dir_destino/disciplinas.tmp | awk -F ";" -v m=$i '{ print m";"$1";"$8";"$4";"$5";"$2";"$3";"$6";"$7 }' >> $dir_destino/disciplinas.csv
-	python $dir_parsers/discente-vinculo.py $dir_fonte/discentes/$i-historico.html >> $dir_destino/vinculo.csv
+	python $dir_parsers/discente-cadastro.py $dir_fonte/discentes/$i-cadastro.html > $dir_destino/cadastro.tmp
+	python $dir_parsers/discente-historico.py $dir_fonte/discentes/$i-historico.html > $dir_destino/historico.tmp
+	paste -d ";" $dir_destino/cadastro.tmp /tmp/curso $dir_destino/historico.tmp >> $dir_destino/students.data
 done
-
-rm -f $dir_destino/matriculas.dat $dir_destino/disciplinas.tmp
-
-rm -rf $dir_destino/resumo.csv $dir_destino/nota.csv $dir_destino/frequencia.csv
 
 for k in $(ls $dir_fonte/turmas)
 do
@@ -56,28 +33,55 @@ do
 		periodo=$(echo $base | awk -F "-" '{ print $1 }')
 		disciplina=$(echo $base | awk -F "-" '{ print $2 }')
 		turma=$(echo $base | awk -F "-" '{ print $3 }')
-		python $dir_parsers/turma-resumo.py $i >> $dir_destino/resumo.csv
-		python $dir_parsers/turma-notas.py $dir/$base-notas.html | awk -v vd=$disciplina -v vt=$turma -v vp=$periodo '{ print vd";"vt";"vp";"$0 }' >> $dir_destino/nota.csv
-	
-		pagina=1
-		while :
-		do
-			if [ $pagina -ne 1 ]; then
-				output=frequencia_extra.tmp
-			else
-				output=frequencia_base.tmp
-			fi
-			python $dir_parsers/turma-frequencia.py $dir/$base-frequencia-$pagina.html | awk -v vd=$disciplina -v vt=$turma -v vp=$periodo '{ print vd";"vt";"vp";"$0 }' | sed -e '/;$/s,,,' >> $dir_destino/$output
-			pagina=$(expr $pagina + 1)
-			test -f $dir/$base-frequencia-$pagina.html
-			if [ $? -ne 0 ]; then
-				break;
-			fi
-		done
+		python $dir_parsers/turma-resumo.py $i | awk -F ";" '{ print $1";"$7";"$4";"$3 }' >> $dir_destino/classes.data
+		python $dir_parsers/turma-notas.py $dir/$base-notas.html | awk -F ";" -v vd=$disciplina -v vt=$turma -v vp=$periodo '{ print $1"-"vd"-"vp";"vt }' >> $dir_destino/index.tmp
 	done
 done
 
-rm -f $dir_destino/frequencia.csv
-cat $dir_destino/frequencia_base.tmp | awk -v d=$dir_destino '{ system("bash -c '\'' process_line process_frequencia \""d";"$0"\" '\'' ") }'
-rm $dir_destino/frequencia_base.tmp $dir_destino/frequencia_extra.tmp
+ed $dir_destino/classes.data > /dev/null 2>&1 <<!
+g/;$/s,,;000000,
+w
+q
+!
 
+for i in `cat $dir_destino/matriculas.tmp`
+do
+        python $dir_parsers/discente-disciplinas.py $dir_fonte/discentes/$i-historico.html | awk -F ";" -v m=$i '{ print m";"$1";"$8";"$4";"$6";"$7 }' > $dir_destino/enrollments.tmp
+	cat $dir_destino/enrollments.tmp | awk -F ";" '{ print $1";"$2";"$3 }' > $dir_destino/p1.tmp
+	cat $dir_destino/enrollments.tmp | awk -F ";" '{ print $4";"$5";"$6 }' > $dir_destino/p3.tmp
+	size=$(ls -l $dir_destino/p1.tmp | awk '{ print $5 }')
+	if [ $size -ne 0 ]; then
+		rm -f $dir_destino/p2.tmp
+		cat $dir_destino/p1.tmp | awk -F ";" '{ print $1"-"$2"-"$3 }' > $dir_destino/keys.tmp
+		for j in $(cat $dir_destino/keys.tmp)
+		do
+			grep "$j" $dir_destino/index.tmp > $dir_destino/class.tmp
+			if [ $? -eq 0 ]; then
+				class=$(cat $dir_destino/class.tmp | awk -F ";" '{ print $2 }' | tail -1)
+				if [ "AA$class" = "AA" ]; then
+					echo "00" >> $dir_destino/p2.tmp
+				else
+					echo $class >> $dir_destino/p2.tmp
+				fi
+			else
+				echo "00" >> $dir_destino/p2.tmp
+			fi
+		done
+		paste -d ";" $dir_destino/p1.tmp $dir_destino/p2.tmp $dir_destino/p3.tmp >> $dir_destino/enrollments.data
+	fi
+done
+
+ed $dir_destino/students.data > /dev/null 2>&1 <<!
+g/;nan;/s,,0\,00,g
+w
+q
+!
+
+rm -f $dir_destino/*.tmp
+
+echo "subjectCode;term;classId;teachers" > $dir_destino/classes.header
+echo "registration;subjectCode;term;classId;credits;grade;status" > $dir_destino/enrollments.header
+echo "registration;nationalId;name;statusStr;admissionStr;affirmativePolicy;birthDate;secondarySchool;secondarySchoolGraduationYear;email;gender;maritalStatus;nationality;country;placeOfBirth;race;disabilities;courseCode;curriculumCode;mandatoryHours;mandatoryCredits;optionalHours;optionalCredits;complementaryHours;complementaryCredits;gpa;mc;iea;completedTerms;suspendedTerms;institutionalEnrollments;mobilityTerms;enrolledCredits;admissionGrade" > $dir_destino/students.header
+echo "" > $dir_destino/classes.number
+echo "credits;grade" > $dir_destino/enrollments.number
+echo "mandatoryHours;mandatoryCredits;electiveHours;electiveCredits;complementaryHours;complementaryCredits;gpa;mc;iea;termsCount;suspendedTerms;institutionalEnrollments;mobilityTerms;enrolledCredits;admissionGrade" > $dir_destino/students.number

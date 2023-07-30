@@ -15,20 +15,6 @@ function process_turmas() {
 	turma=$(echo $linha | awk -F ";" '{ print $2 }')
 	$dir_scripts/crawler.sh $credencial https://pre.ufcg.edu.br:8443/ControleAcademicoOnline/Controlador\?command=CoordenacaoTurmaResumo\&codigo=$disciplina\&turma=$turma $dir_destino/turmas/$periodo/$periodo-$disciplina-$turma.html $periodo
 	$dir_scripts/crawler.sh $credencial https://pre.ufcg.edu.br:8443/ControleAcademicoOnline/Controlador\?command=CoordenacaoTurmaNotas\&codigo=$disciplina\&turma=$turma $dir_destino/turmas/$periodo/$periodo-$disciplina-$turma-notas.html $periodo
-
-	pagina=1
-        $dir_scripts/crawler.sh $credencial https://pre.ufcg.edu.br:8443/ControleAcademicoOnline/Controlador\?command=CoordenacaoTurmaFrequencia\&codigo=$disciplina\&turma=$turma\&p=$pagina $dir_destino/turmas/$periodo/$periodo-$disciplina-$turma-frequencia-$pagina.html $periodo
-	while :
-	do
-		pagina_anterior=$pagina
-		pagina=$(expr $pagina + 1)
-		$dir_scripts/crawler.sh $credencial https://pre.ufcg.edu.br:8443/ControleAcademicoOnline/Controlador\?command=CoordenacaoTurmaFrequencia\&codigo=$disciplina\&turma=$turma\&p=$pagina $dir_destino/turmas/$periodo/$periodo-$disciplina-$turma-frequencia-$pagina.html $periodo
-		s=$(diff $dir_destino/turmas/$periodo/$periodo-$disciplina-$turma-frequencia-$pagina.html $dir_destino/turmas/$periodo/$periodo-$disciplina-$turma-frequencia-$pagina_anterior.html | wc -l)
-		if [ $s -eq 0 ]; then
-			rm $dir_destino/turmas/$periodo/$periodo-$disciplina-$turma-frequencia-$pagina.html
-			break;
-		fi
-	done
 }
 
 export -f process_line
